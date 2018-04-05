@@ -1,0 +1,19 @@
+<!doctype html>
+
+<html>
+<head>
+    <title>Image Annotation Tool</title>
+    <body>
+        <p>
+            画像一覧
+        </p>
+        {% block content%}
+        <ul>
+        {% for id, img, flag in imgs %}
+            <li><a href="/annotate/{{id}}">{{id}} {{img}} {{flag}}</a></li>
+        {% endfor %}
+        </ul>
+        {% endblock %}
+        
+    </body>
+</head>

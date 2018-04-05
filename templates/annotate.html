@@ -1,0 +1,47 @@
+<!doctype html>
+
+{% if flag == 'locked' %}
+    {% set locked_radio = 'checked' %}
+    {% set non_locked_radio = '' %}
+{% else %}
+    {% set locked_radio = '' %}
+    {% set non_locked_radio = 'checked' %}
+{% endif %}
+
+<html>
+<head>
+    <title>Image Annotation Tool</title>
+    <body>
+        <p>
+            {{img}}
+        </p>
+        
+        <p>
+            {% if flag == None %}
+                まだアノテーションされていない画像です。
+            {% else %}
+                アノテーション済みの画像です。
+            {% endif %}
+        </p>
+        
+        <form method="post" action="/save/{{id}}">
+            <input type="radio" name="locked" value="locked" {{locked_radio}}>locked
+            <input type="radio" name="locked" value="non-locked" {{non_locked_radio}}>non-locked
+            <p>
+                <input type="submit" value="save">
+            </p>
+        </form>
+        
+        <p>
+            <a href="/annotate/{{id-1}}">prev</a>
+        </p>
+            <a href="/annotate/{{id+1}}">next</a>
+        </p>
+        
+        <p>
+            <a href="/">home</a>
+        </p>
+        
+        
+    </body>
+</head>
