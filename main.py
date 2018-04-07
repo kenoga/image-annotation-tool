@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-
-
 import os
 import json
-from flask import Flask, render_template, redirect, url_for, request
+from flask import Flask, render_template, redirect, url_for, request, flash
 
-IMAGE_DIR = './images'
+IMAGE_DIR = './static/images'
 JSON_FILE = './test.json'
 
-
-sorted_image_names = sorted(os.listdir(IMAGE_DIR))
+# 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
+sorted_image_names = sorted([name for name in os.listdir(IMAGE_DIR) if '.jpg' in name or '.jpeg' in name])
 id2img = {}
 img2id = {}
+# 各画像にidを振って, id->img, img->idのdictを作成
 for i in range(0, len(sorted_image_names)):
     id2img[i] = sorted_image_names[i]
     img2id[sorted_image_names[i]] = i
@@ -24,32 +22,22 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     imgs = []
-    for id, img in sorted(id2img.items()):
-        flag = get_flag(id)
-        imgs.append((id, img, flag))
+    for img_id, img in sorted(id2img.items()):
+        label = get_label(img_id)
+        imgs.append((img_id, img, label))
 
     return render_template('index.html', imgs=imgs)
 
-@app.route('/annotate/<id>')
-def annotate(id=None):
-    # TODO: 不正な値が与えられたときは前の画面でエラーメッセージを出したい
-    if not is_valid_id:
-        flash('Invalid id.')
-        return redirect('/')
 
-    id=int(id)
-    img = id2img[id]
-    flag = get_flag(id)
+@app.route('/annotate/<img_id>', methods=['POST', 'GET'])
+def annotate(img_id=None):
+    if not is_valid_id(img_id):
+        flash('Image id is invalid...')
+        return redirect(url_for('index'))
     
-    return render_template('annotate.html', id=id, img=img, flag=flag)
-
-# TODO: POSTでアノテーションの結果を受け取り，annotationsの中身を書き換え，jsonファイルを更新する
-@app.route('/save/<id>', methods=['POST'])
-def save(id=None):
-    if not is_valid_id: return redirect('/')
+    img_id = int(img_id)
+    img = id2img[img_id]
     
-    id = int(id)
-    img = id2img[id]
     if request.method == 'POST':
         ant = request.form['locked']
         if ant == 'locked':
@@ -57,28 +45,30 @@ def save(id=None):
         elif ant == 'non-locked':
             annotations[img] = 'non-locked'
         else:
-            return redirect('/annotate/%d' % id)
+            return redirect('/annotate/%d' % img_id)
         with open(JSON_FILE, 'w') as fw:
             json.dump(annotations, fw)
-    
-    return redirect('/')
+        flash('Annotation to %s is completed!' % img)
+        return render_template('annotate.html', id=img_id, img=img, label=annotations[img])
+
+    return render_template('annotate.html', id=img_id, img=img, label=get_label(img_id))
 
 
-def is_valid_id(id):
-    if id is None or type(id) != int or int(id) not in id2img:
+def is_valid_id(img_id):
+    if img_id is None or int(img_id) not in id2img:
         return False
     return True
 
-
-# id: int
-def get_flag(id):
-    img = id2img[id]
+# img_id: int
+def get_label(img_id):
+    img = id2img[img_id]
     if img in annotations:
         return annotations[img]
     else:
         return None
 
 
-
 if __name__ == "__main__":
+    app.secret_key = 'key'
     app.run(debug=True)
+    

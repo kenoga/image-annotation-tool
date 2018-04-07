@@ -1,19 +1,38 @@
-<!doctype html>
+{% extends 'template.html' %}
 
-<html>
-<head>
-    <title>Image Annotation Tool</title>
-    <body>
-        <p>
-            画像一覧
-        </p>
-        {% block content%}
-        <ul>
-        {% for id, img, flag in imgs %}
-            <li><a href="/annotate/{{id}}">{{id}} {{img}} {{flag}}</a></li>
-        {% endfor %}
-        </ul>
-        {% endblock %}
-        
-    </body>
-</head>
+
+{% block content %}
+<script>
+jQuery( function($) {
+    $('tbody tr[data-href]').addClass('clickable').click( function() {
+        window.location = $(this).attr('data-href');
+        }).find('a').hover( function() {
+        $(this).parents('tr').unbind('click');
+        }, function() {
+        $(this).parents('tr').click( function() {
+        window.location = $(this).attr('data-href');
+        });
+    });
+});
+</script>
+<p>
+    画像一覧
+</p>
+<table>
+    <tbody>
+    <tr>
+        <th class="vw5">ID</th>
+        <th class="vw20">画像名</th>
+        <th class="vw10">ラベル</th>
+    </tr>
+    {% for id, img, label in imgs %}
+        <tr data-href="/annotate/{{id}}" class="linked-tr">
+            <td>{{id}}</td>
+            <td>{{img}}</td>
+            <td>{{label}}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
