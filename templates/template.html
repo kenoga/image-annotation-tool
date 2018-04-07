@@ -9,12 +9,12 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 
     <div class="container">
-        <div class='message'>
-            {% with messages = get_flashed_messages() %}
+        <div class='message-div'>
+            {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <ul class='message-list'>
-                {% for m in messages %}
-                    <li>{{ m }}</li>
+                {% for category, message in messages %}
+                    <li class="message {{category}}">{{ message }}</li>
                 {% endfor %}
                 </ul>
             {% endif%}

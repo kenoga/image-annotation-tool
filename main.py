@@ -32,7 +32,7 @@ def index():
 @app.route('/annotate/<img_id>', methods=['POST', 'GET'])
 def annotate(img_id=None):
     if not is_valid_id(img_id):
-        flash('Image id is invalid...')
+        flash('Image id is invalid...', 'error')
         return redirect(url_for('index'))
     
     img_id = int(img_id)
@@ -48,8 +48,8 @@ def annotate(img_id=None):
             return redirect('/annotate/%d' % img_id)
         with open(JSON_FILE, 'w') as fw:
             json.dump(annotations, fw)
-        flash('Annotation to %s is completed!' % img)
-        return render_template('annotate.html', id=img_id, img=img, label=annotations[img])
+        flash('Annotation to %s is completed!' % img, 'success')
+        # return render_template('annotate.html', id=img_id, img=img, label=annotations[img])
 
     return render_template('annotate.html', id=img_id, img=img, label=get_label(img_id))
 
