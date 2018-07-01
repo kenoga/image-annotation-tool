@@ -1,18 +1,17 @@
 import os
 import json
+import glob
+from collections import defaultdict
 from flask import Flask, render_template, redirect, url_for, request, flash
 
+STATIC_DIRNAME = 'static'
 IMAGE_DIR = './static/images'
 JSON_FILE = './test.json'
+LABELS = ["ok", "one-eye", "no-eye", "closed-eyes", "other"]
 
 # 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
-sorted_image_names = sorted([name for name in os.listdir(IMAGE_DIR) if '.jpg' in name or '.jpeg' in name])
-id2img = {}
-img2id = {}
-# 各画像にidを振って, id->img, img->idのdictを作成
-for i in range(0, len(sorted_image_names)):
-    id2img[i] = sorted_image_names[i]
-    img2id[sorted_image_names[i]] = i
+# TODO: static内に存在すればどんなパスでも取得できるようにする
+img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
 
 with open(JSON_FILE) as fr:
     annotations = json.load(fr)
@@ -22,51 +21,65 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     imgs = []
-    for img_id, img in sorted(id2img.items()):
-        label = get_label(img_id)
-        imgs.append((img_id, img, label))
+    for index, img_path in enumerate(img_paths):
+        img_name = get_img_name(img_path)
+        label = get_label(img_name)
+        imgs.append((index, img_name, label))
 
     return render_template('index.html', imgs=imgs)
 
 
-@app.route('/annotate/<img_id>', methods=['POST', 'GET'])
-def annotate(img_id=None):
-    if not is_valid_id(img_id):
+@app.route('/annotate/<img_index>', methods=['POST', 'GET'])
+def annotate(img_index=None):
+    if not is_valid_index(img_index):
         flash('Image id is invalid...', 'error')
         return redirect(url_for('index'))
-    
-    img_id = int(img_id)
-    img = id2img[img_id]
+    img_index = int(img_index)
+    img_path = img_paths[img_index]
+    img_name = get_img_name(img_path)
+    img_path_for_client = get_img_path_for_client(img_path)
     
     if request.method == 'POST':
-        ant = request.form['locked']
-        if ant == 'locked':
-            annotations[img] = 'locked'
-        elif ant == 'non-locked':
-            annotations[img] = 'non-locked'
-        else:
-            return redirect('/annotate/%d' % img_id)
+        ant = request.form['ant']
+        annotations[img_name] = ant
         with open(JSON_FILE, 'w') as fw:
             json.dump(annotations, fw)
-        flash('Annotation to %s is completed!' % img, 'success')
-        # return render_template('annotate.html', id=img_id, img=img, label=annotations[img])
+        flash('Annotation to %s is completed!' % img_name, 'success')
 
-    return render_template('annotate.html', id=img_id, img=img, label=get_label(img_id))
+    label = get_label(img_name)
+    return render_template('annotate.html', 
+                           index=img_index,
+                           img_name=img_name,
+                           img_path=img_path_for_client,
+                           label=label,
+                           labels=LABELS,
+                           checked_or_not=create_checked_or_not_list(label, LABELS))
 
+def create_checked_or_not_list(label, labels):
+    li = [""] * len(labels)
+    if label is None:
+        li[0] = "checked"
+    else:
+        li[label.index(label)] = "checked"
+    return li
 
-def is_valid_id(img_id):
-    if img_id is None or int(img_id) not in id2img:
+def is_valid_index(img_index):
+    if img_index is None or int(img_index) < 0 or int(img_index) >= len(img_paths):
         return False
     return True
 
-# img_id: int
-def get_label(img_id):
-    img = id2img[img_id]
-    if img in annotations:
-        return annotations[img]
+def get_label(img_name):
+    if img_name in annotations:
+        return annotations[img_name]
     else:
         return None
 
+def get_img_name(img_path):
+    return os.path.basename(img_path)
+    
+def get_img_path_for_client(img_path):
+    return "/static" + img_path.split(STATIC_DIRNAME)[1]
+    
 
 if __name__ == "__main__":
     app.secret_key = 'key'

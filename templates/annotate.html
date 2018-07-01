@@ -1,17 +1,10 @@
 
 {% extends 'template.html' %}
 
-{% if label == 'locked' %}
-    {% set locked_radio = 'checked' %}
-    {% set non_locked_radio = '' %}
-{% else %}
-    {% set locked_radio = '' %}
-    {% set non_locked_radio = 'checked' %}
-{% endif %}
 
 {% block content %}
 <p>
-    ファイル名: {{img}}
+    ファイル名: {{img_name}}
     {% if label == None %}
         (未アノテーション)
     {% else %}
@@ -21,13 +14,15 @@
 </p>
 
 <div class="img-div">
-    <img src="/static/images/{{img}}"/>
+    <img src="{{img_path}}"/>
+    {{img_path}}
 </div>
 
 <div class="form-div">
-    <form method="post" action="/annotate/{{id}}">
-        <input type="radio" name="locked" value="locked" {{locked_radio}}>locked
-        <input type="radio" name="locked" value="non-locked" {{non_locked_radio}}>non-locked
+    <form method="post" action="/annotate/{{index}}">
+        {% for label in labels %}
+            <input type="radio" name="ant" value="{{label}}" {{checked_or_not[loop.index0]}}>{{label}}
+        {% endfor %}
         <p>
             <input type="submit" value="save" class='save-button'>
         </p>
@@ -37,10 +32,10 @@
 
 <div class="prev-next-div">
     <p>
-        <a href="/annotate/{{id-1}}">prev</a>
+        <a href="/annotate/{{index-1}}">prev</a>
     </p>
     <p>　
-        <a href="/annotate/{{id+1}}">next</a>
+        <a href="/annotate/{{index+1}}">next</a>
     </p>
 </div>
 
