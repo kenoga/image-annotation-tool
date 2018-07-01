@@ -43,11 +43,11 @@ td {
 }
 
 .img-div {
-    width: 50vw;
+    width: 40vw;
     margin: 0 auto;
 }
 .img-div > img {
-    width: 50vw;
+    width: 40vw;
 }
 
 .form-div, .prev-next-div, .home-div {
