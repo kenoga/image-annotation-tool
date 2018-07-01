@@ -6,12 +6,12 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 
 STATIC_DIRNAME = 'static'
 IMAGE_DIR = './static/images'
-JSON_FILE = './test.json'
+JSON_FILE = './annotations.json'
 LABELS = ["ok", "one-eye", "no-eye", "closed-eyes", "other"]
 
 # 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
 # TODO: static内に存在すればどんなパスでも取得できるようにする
-img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
+img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*.jpg"))])
 
 with open(JSON_FILE) as fr:
     annotations = json.load(fr)
