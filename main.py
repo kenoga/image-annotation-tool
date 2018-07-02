@@ -10,15 +10,34 @@ JSON_FILE = './annotations.json'
 LABELS = ["ok", "one-eye", "no-eye", "closed-eyes", "other"]
 PAGE_SIZE = 15
 
-# 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
-# TODO: static内に存在すればどんなパスでも取得できるようにする
-img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
+LOCKED_TARGETS = [0,1,2,31,32,50]
 
+def get_img_paths():
+    # 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
+    # TODO: static内に存在すればどんなパスでも取得できるようにする
+    # non_sorted_img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
+    non_sorted_img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*.jpg"))])
+    target2paths = defaultdict(list)
+    for path in non_sorted_img_paths:
+        name = os.path.basename(path)
+        target = int(name.split(".")[0].split("_")[3])
+        target2paths[target].append(path)
+
+    img_paths = []
+    for locked_target in LOCKED_TARGETS:
+        img_paths.extend(sorted(target2paths[locked_target]))
+    
+    for target in sorted(target2paths.keys()):
+        if target not in LOCKED_TARGETS:
+            img_paths.extend(sorted(target2paths[target]))
+    return img_paths
+    
 with open(JSON_FILE) as fr:
     annotations = json.load(fr)
+img_paths = get_img_paths()
+
 
 app = Flask(__name__)
-
 
 @app.route('/')
 @app.route('/<page_index>')
@@ -106,6 +125,7 @@ def get_img_path_for_client(img_path):
 
 if __name__ == "__main__":
     app.secret_key = 'key'
-    app.run(debug=True, port=5001)
+    # app.run(debug=True, port=5001)
+    app.run(debug=False, host='0.0.0.0', port=5000)
     
     
