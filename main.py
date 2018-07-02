@@ -63,6 +63,8 @@ def annotate(img_index=None):
         with open(JSON_FILE, 'w') as fw:
             json.dump(annotations, fw)
         flash('Annotation to %s is completed!' % img_name, 'success')
+        label = get_label(img_name)
+        return redirect('/%s' % page_index)
 
     label = get_label(img_name)
     return render_template('annotate.html', 
@@ -105,4 +107,5 @@ def get_img_path_for_client(img_path):
 if __name__ == "__main__":
     app.secret_key = 'key'
     app.run(debug=True, port=5001)
+    
     
