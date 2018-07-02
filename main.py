@@ -8,25 +8,42 @@ STATIC_DIRNAME = 'static'
 IMAGE_DIR = './static/images'
 JSON_FILE = './annotations.json'
 LABELS = ["ok", "one-eye", "no-eye", "closed-eyes", "other"]
+PAGE_SIZE = 15
 
 # 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
 # TODO: static内に存在すればどんなパスでも取得できるようにする
-img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*.jpg"))])
+img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
 
 with open(JSON_FILE) as fr:
     annotations = json.load(fr)
 
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    imgs = []
-    for index, img_path in enumerate(img_paths):
-        img_name = get_img_name(img_path)
-        label = get_label(img_name)
-        imgs.append((index, img_name, label))
 
-    return render_template('index.html', imgs=imgs)
+@app.route('/')
+@app.route('/<page_index>')
+def index(page_index=None):
+    if page_index is None or int(page_index) < 0:
+        page_index = 0
+    else:
+        page_index = int(page_index)
+    imgs = []
+    start = max(0, page_index * PAGE_SIZE)
+    end = min(len(img_paths), start + PAGE_SIZE)
+    
+    for index, img_path in enumerate(img_paths[start:end]):
+        index = start + index
+        img_name = get_img_name(img_path)
+        img_path_for_client = get_img_path_for_client(img_path)
+        label = get_label(img_name)
+        checked_or_not = create_checked_or_not_list(label, LABELS)
+        imgs.append((index, img_name, img_path_for_client, label, checked_or_not))
+
+    return render_template('index.html',
+                           imgs=imgs,
+                           page_index=page_index,
+                           labels=LABELS,
+                           )
 
 
 @app.route('/annotate/<img_index>', methods=['POST', 'GET'])
@@ -38,7 +55,8 @@ def annotate(img_index=None):
     img_path = img_paths[img_index]
     img_name = get_img_name(img_path)
     img_path_for_client = get_img_path_for_client(img_path)
-    
+
+    page_index = img_index // PAGE_SIZE
     if request.method == 'POST':
         ant = request.form['ant']
         annotations[img_name] = ant
@@ -53,14 +71,17 @@ def annotate(img_index=None):
                            img_path=img_path_for_client,
                            label=label,
                            labels=LABELS,
-                           checked_or_not=create_checked_or_not_list(label, LABELS))
+                           checked_or_not=create_checked_or_not_list(label, LABELS),
+                           page_index=page_index)
+
+
 
 def create_checked_or_not_list(label, labels):
     li = [""] * len(labels)
     if label is None:
         li[0] = "checked"
     else:
-        li[label.index(label)] = "checked"
+        li[labels.index(label)] = "checked"
     return li
 
 def is_valid_index(img_index):
@@ -72,7 +93,7 @@ def get_label(img_name):
     if img_name in annotations:
         return annotations[img_name]
     else:
-        return None
+        return LABELS[0]
 
 def get_img_name(img_path):
     return os.path.basename(img_path)
@@ -83,5 +104,5 @@ def get_img_path_for_client(img_path):
 
 if __name__ == "__main__":
     app.secret_key = 'key'
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
     

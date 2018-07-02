@@ -4,7 +4,7 @@
 {% block content %}
 <script>
 jQuery( function($) {
-    $('tbody tr[data-href]').addClass('clickable').click( function() {
+    $('tbody td[data-href]').addClass('clickable').click( function() {
         window.location = $(this).attr('data-href');
         }).find('a').hover( function() {
         $(this).parents('tr').unbind('click');
@@ -23,16 +23,38 @@ jQuery( function($) {
     <tr>
         <th class="vw5">ID</th>
         <th class="vw20">画像名</th>
+        <th class="vw20">画像</th>
         <th class="vw10">ラベル</th>
+        <th class="vw40"></th>
     </tr>
-    {% for id, img, label in imgs %}
-        <tr data-href="/annotate/{{id}}" class="linked-tr">
-            <td>{{id}}</td>
-            <td>{{img}}</td>
-            <td>{{label}}</td>
+    {% for index, img_name, img_path, label, checked_or_not in imgs %}
+        <tr class="linked-tr">
+            <td data-href="/annotate/{{index}}">{{index}}</td>
+            <td data-href="/annotate/{{index}}">{{img_name}}</td>
+            <td data-href="/annotate/{{index}}"><img src="{{img_path}}"/></td>
+            <td data-href="/annotate/{{index}}">{{label}}</td>
+            <td>
+                <form method="post" action="/annotate/{{index}}">
+                    {% for label in labels %}
+                        <input type="radio" name="ant" value="{{label}}" {{checked_or_not[loop.index0]}}>{{label}}
+                    {% endfor %}
+                    <p>
+                        <input type="submit" value="save" class='save-button'>
+                    </p>
+                </form>
+            </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
+
+<div class="prev-next-div">
+    <p>
+        <a href="/{{page_index-1}}">prev</a>
+    </p>
+    <p>　
+        <a href="/{{page_index+1}}">next</a>
+    </p>
+</div>
 {% endblock %}
 
