@@ -5,20 +5,30 @@ from collections import defaultdict
 from flask import Flask, render_template, redirect, url_for, request, flash
 
 STATIC_DIRNAME = 'static'
-IMAGE_DIR = './static/images'
+IMAGE_DIR_1 = './static/data/omni/both_eyes_from_aligned_with_68'
+IMAGE_DIR_2 = './static/data/omni/face_with_landmarks'
+
 JSON_FILE = './annotations.json'
-LABELS = ["ok", "one-eye", "no-eye", "closed-eyes", "other"]
+LABELS = ["ok", "small_gap", "big_gap", "not_eyes", "one_eye", "blink", "other"]
 PAGE_SIZE = 15
 
 # 指定されたディレクトリに存在する画像ファイル名をリスト化してソート
 # TODO: static内に存在すればどんなパスでも取得できるようにする
-img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR, "*/*/*.jpg"))])
+img_paths = sorted([path for path in glob.glob(os.path.join(IMAGE_DIR_1, "*/*.jpg"))])
+
+# skip_num = 4でフィルタリング 
+skip_num = 4
+img_paths = [path for path in img_paths if int(os.path.basename(path).split(".")[0].split("_")[4]) % (skip_num+1) == 0]
+img_paths = [path for path in img_paths if int(os.path.basename(path).split(".")[0].split("_")[4]) <= 50]
 
 with open(JSON_FILE) as fr:
     annotations = json.load(fr)
 
 app = Flask(__name__)
 
+@app.route('/favicon.ico')
+def favicon():
+    return ""
 
 @app.route('/')
 @app.route('/<page_index>')
@@ -101,11 +111,13 @@ def get_img_name(img_path):
     return os.path.basename(img_path)
     
 def get_img_path_for_client(img_path):
-    return "/static" + img_path.split(STATIC_DIRNAME)[1]
+    path1 = "/static" + img_path.split(STATIC_DIRNAME)[1]
+    path2 = "/static" + img_path.split(STATIC_DIRNAME)[1].replace("both_eyes_from_aligned_with_68", "face_with_landmarks")
+    return path1, path2
     
 
 if __name__ == "__main__":
     app.secret_key = 'key'
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5111)
     
     
