@@ -21,17 +21,19 @@ jQuery( function($) {
 <table>
     <tbody>
     <tr>
-        <th class="vw5">ID</th>
+        <th class="vw2">ID</th>
         <th class="vw20">画像名</th>
-        <th class="vw20">画像</th>
-        <th class="vw10">ラベル</th>
-        <th class="vw40"></th>
+        <th class="vw10">画像1</th>
+        <th class="vw20">画像2</th>
+        <th class="vw5">ラベル</th>
+        <th class="vw60"></th>
     </tr>
     {% for index, img_name, img_path, label, checked_or_not in imgs %}
         <tr class="linked-tr">
             <td data-href="/annotate/{{index}}">{{index}}</td>
             <td data-href="/annotate/{{index}}">{{img_name}}</td>
-            <td data-href="/annotate/{{index}}"><img src="{{img_path}}"/></td>
+            <td data-href="/annotate/{{index}}"><img src="{{img_path[0]}}"/></td>
+            <td data-href="/annotate/{{index}}"><img src="{{img_path[1]}}" width="150" height="150"/></td>
             <td data-href="/annotate/{{index}}">{{label}}</td>
             <td>
                 <form method="post" action="/annotate/{{index}}">

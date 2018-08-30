@@ -6,12 +6,12 @@ ul, li, p, div {
 }
 
 .container {
-    width: 80vw;
+    width: 90vw;
     margin: 0 auto;
 }
 
 .message-div {
-    width: 80vw;
+    width: 90vw;
 }
     
 .message-list {
